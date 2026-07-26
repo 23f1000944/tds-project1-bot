@@ -99,9 +99,11 @@ def run_bot():
     print("Starting Telegram Bot...")
     bot.infinity_polling()
 
-if __name__ == "__main__":
+@app.on_event("startup")
+def startup_event():
     # Start bot in a background thread
     threading.Thread(target=run_bot, daemon=True).start()
-    
+
+if __name__ == "__main__":
     # Start FastAPI server
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
