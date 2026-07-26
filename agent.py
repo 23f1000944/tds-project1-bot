@@ -29,24 +29,27 @@ def execute_python_code(code: str) -> str:
         sys.stdout = old_stdout
         sys.stderr = old_stderr
 
-import threading
+from google.genai.errors import APIError
 
-_api_lock = threading.Lock()
-_last_request_time = 0
+MODELS_TO_TRY = [
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash'
+]
 
-def _rate_limited_generate(client, model, messages, config):
-    global _last_request_time
-    with _api_lock:
-        now = time.time()
-        elapsed = now - _last_request_time
-        if elapsed < 12.5:
-            time.sleep(12.5 - elapsed)
-        _last_request_time = time.time()
-        return client.models.generate_content(
-            model=model,
-            contents=messages,
-            config=config
-        )
+def _generate_with_fallback(client, messages, config):
+    for model in MODELS_TO_TRY:
+        try:
+            return client.models.generate_content(
+                model=model,
+                contents=messages,
+                config=config
+            )
+        except Exception as e:
+            print(f"Model {model} failed: {e}")
+            continue
+    raise Exception("All fallback models exhausted")
 
 def run_agent(question: str, api_key: str, chat_history: list = None) -> tuple[str, list]:
     """
@@ -87,9 +90,8 @@ def run_agent(question: str, api_key: str, chat_history: list = None) -> tuple[s
     max_steps = 5
     for step in range(max_steps):
         # Generate content
-        response = _rate_limited_generate(
+        response = _generate_with_fallback(
             client=client,
-            model='gemini-3.6-flash',
             messages=messages,
             config=config
         )
