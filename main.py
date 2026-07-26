@@ -15,7 +15,7 @@ load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 LLM_API_KEY = os.getenv("LLM_API_KEY")
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+BASE_URL = os.getenv("BASE_URL", "https://tds-project1-bot.onrender.com")
 
 app = FastAPI()
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
