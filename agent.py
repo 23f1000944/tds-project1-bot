@@ -38,18 +38,27 @@ MODELS_TO_TRY = [
     'gemini-2.5-flash'
 ]
 
+import threading
+import time
+
+_api_lock = threading.Lock()
+
 def _generate_with_fallback(client, messages, config):
+    errors = []
     for model in MODELS_TO_TRY:
         try:
+            with _api_lock:
+                time.sleep(12.5)
             return client.models.generate_content(
                 model=model,
                 contents=messages,
                 config=config
             )
         except Exception as e:
+            errors.append(f"{model} failed: {e}")
             print(f"Model {model} failed: {e}")
             continue
-    raise Exception("All fallback models exhausted")
+    raise Exception(f"All fallback models exhausted. Errors: {errors}")
 
 def run_agent(question: str, api_key: str, chat_history: list = None) -> tuple[str, list]:
     """
