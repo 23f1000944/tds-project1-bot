@@ -48,7 +48,7 @@ def _generate_with_fallback(client, messages, config):
     for model in MODELS_TO_TRY:
         try:
             with _api_lock:
-                time.sleep(12.5)
+                time.sleep(4.5)
             return client.models.generate_content(
                 model=model,
                 contents=messages,
