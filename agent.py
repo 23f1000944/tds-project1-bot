@@ -40,6 +40,7 @@ def run_agent(question: str, api_key: str, chat_history: list = None):
         "You are a Data Analyst Agent. Your goal is to answer data-analysis questions. "
         "You can execute Python code to download data, read CSVs/JSONs, and perform analysis. "
         "When you use the execute_python_code tool, print the final answer so you can see it in the STDOUT. "
+        "CRITICAL: If the user asks a new question, you MUST execute python code to find the answer. DO NOT guess or rely on your training data. DO NOT copy previous answers. "
         "Once you have the answer, you must respond with EXACTLY ONE JSON OBJECT containing the answer "
         "in the exact shape requested by the user. DO NOT wrap the JSON in markdown blocks like ```json. "
         "Just output the raw JSON object."
@@ -49,10 +50,10 @@ def run_agent(question: str, api_key: str, chat_history: list = None):
     messages = []
     
     if chat_history:
-        for msg in chat_history:
-            messages.append(types.Content(role="user", parts=[types.Part.from_text(text=msg)]))
-            # Assuming history is all user messages for now, or you can format them
-    
+        for i, msg in enumerate(chat_history):
+            role = "user" if i % 2 == 0 else "model"
+            messages.append(types.Content(role=role, parts=[types.Part.from_text(text=msg)]))
+            
     messages.append(types.Content(role="user", parts=[types.Part.from_text(text=question)]))
     
     logs = []
@@ -67,7 +68,7 @@ def run_agent(question: str, api_key: str, chat_history: list = None):
     for step in range(max_steps):
         # Generate content
         response = client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash',
             contents=messages,
             config=config
         )
