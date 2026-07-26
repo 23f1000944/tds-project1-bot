@@ -1,0 +1,10 @@
+pyTelegramBotAPI
+google-genai
+python-dotenv
+pandas
+numpy
+requests
+beautifulsoup4
+openpyxl
+fastapi
+uvicorn
