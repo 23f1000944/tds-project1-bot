@@ -29,7 +29,26 @@ def execute_python_code(code: str) -> str:
         sys.stdout = old_stdout
         sys.stderr = old_stderr
 
-def run_agent(question: str, api_key: str, chat_history: list = None):
+import threading
+
+_api_lock = threading.Lock()
+_last_request_time = 0
+
+def _rate_limited_generate(client, model, messages, config):
+    global _last_request_time
+    with _api_lock:
+        now = time.time()
+        elapsed = now - _last_request_time
+        if elapsed < 12.5:
+            time.sleep(12.5 - elapsed)
+        _last_request_time = time.time()
+        return client.models.generate_content(
+            model=model,
+            contents=messages,
+            config=config
+        )
+
+def run_agent(question: str, api_key: str, chat_history: list = None) -> tuple[str, list]:
     """
     Runs the agent with the given question and history.
     chat_history should be a list of strings if we want to include previous turns.
@@ -68,10 +87,10 @@ def run_agent(question: str, api_key: str, chat_history: list = None):
     max_steps = 5
     for step in range(max_steps):
         # Generate content
-        time.sleep(15)
-        response = client.models.generate_content(
+        response = _rate_limited_generate(
+            client=client,
             model='gemini-3.6-flash',
-            contents=messages,
+            messages=messages,
             config=config
         )
         
