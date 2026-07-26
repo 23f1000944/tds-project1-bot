@@ -68,7 +68,7 @@ def run_agent(question: str, api_key: str, chat_history: list = None):
     for step in range(max_steps):
         # Generate content
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=messages,
             config=config
         )
